@@ -5,6 +5,7 @@ const cors = require('cors')
 const morgan = require('morgan')
 
 app.use(express.json())
+app.use(express.static('build'))
 app.use(cors())
 app.use(morgan( (tokens, req,res) => {
     if (tokens.method(req,res) === 'POST') {
@@ -59,7 +60,7 @@ app.post('/api/persons', (req,res) => {
     }else if (isNaN(newPerson.number)) {
         res.json({error:'number field is NaN'})
     }else{
-        newPerson.id = Math.round(Math.random() * 1000000)
+        newPerson.id = Math.round(Math.random() * 999999999)
         newPerson.number = Number(newPerson.number)
         persons.push(newPerson)
         res.json(newPerson)
