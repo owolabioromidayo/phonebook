@@ -1,8 +1,11 @@
-// const {uuid} = require('uuidv4')
+require('dotenv').config()
 const express = require('express')
-const app = express()
 const cors = require('cors')
 const morgan = require('morgan')
+const Person = require('./models/person')
+const { response } = require('express')
+
+const app = express()
 
 app.use(express.json())
 app.use(express.static('build'))
@@ -30,55 +33,90 @@ app.use(morgan( (tokens, req,res) => {
 }))
 
 
-
-let persons = [
-    {id : 1, name : "Arto Hellas", number: "040-1234556" },
-    {id : 2, name : "Ada Lovelace", number: "040-123455944" }
-]
-
-app.get('/api/persons', (req,res) => {
-    res.json(persons)
+app.get('/api/persons', (req, res, next) => {
+    Person
+    .find({})
+    .then(persons => {res.json(persons)})
+    .catch(err => next(err))
 })
 
-app.get('/api/persons/:id', (req,res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-    if (person){
-        res.json(person)
+app.get('/api/persons/:id', (req, res, next) => {
+    Person
+    .findById(req.params.id)
+    .then(person => {
+        if(person){
+            res.json(person)
+        }else {
+            res.status(404).end()
+        }})
+    .catch(err => next(err))
+})
+
+app.put('/api/persons/:id', (req,res,next) => {
+    const body = req.body
+
+    const person = {
+        name : body.name,
+        number : body.number
     }
-    else{
-        res.status(404).end()
+    Person
+    .findByIdAndUpdate(req.params.id, person, {new:true})
+    .then(updatedNote => res.json(updatedNote))
+    .catch(err => next(err))
+})
+
+app.post('/api/persons', (req, res, next) => {
+    const body = req.body
+    // if (body.name === undefined || body.number == undefined) {
+    //     return res.status(400).json({error: 'content missing'})
+    // }
+    const person = new Person({
+        name : body.name,
+        number : body.number
+    })
+    person
+    .save()
+    .then(savedPerson => res.json(savedPerson))
+    .catch(err => next(err))
+})
+
+app.get('/info', (req, res, next) => {
+    Person
+    .find({})
+    .then(persons => {
+        let date = new Date()
+        res.send(`Phonebook has info for ${persons.length} ${persons.length > 1 ? 'people': 'person'} \ 
+                 <br/><br/> ${date.toDateString()} ${date.toTimeString()} `)
+    })
+    .catch(err => next(err))
+})
+
+app.delete('/api/persons/:id', (req,res, next) => {
+    Person
+    .findByIdAndRemove(req.params.id)
+    .then(res.status(204).end())
+    .catch(err => next(err))
+})
+
+
+const unknownEndpoint = (req,res) => {
+    console.log('on thiss');
+    res.status(404).send({error: 'unknown endpoint'})
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (err, req, res, next) => {
+    console.log(err.message)
+    if(err.name === 'CastError'){
+        return response.status(400).send({error: 'malformated id'})
+    } else if (err.name === 'ValidationError'){
+        return res.status(400).json({error : err.message})
     }
-})
+}
 
-app.post('/api/persons', (req,res) => {
-    const newPerson = req.body
-    if (persons.find(person => person.name === newPerson.name)){
-        res.send({error :'name must be unique' })
-    }else if(newPerson.name === undefined || newPerson.number === undefined) {
-        res.json({error: 'Incomplete information'})
-    }else if (isNaN(newPerson.number)) {
-        res.json({error:'number field is NaN'})
-    }else{
-        newPerson.id = Math.round(Math.random() * 999999999)
-        newPerson.number = Number(newPerson.number)
-        persons.push(newPerson)
-        res.json(newPerson)
-    }
+app.use(errorHandler)
 
-})
-
-app.get('/info', (req,res) => {
-    let date = new Date()
-    res.send(`Phonebook has info for ${persons.length} people <br/><br/> ${date.toDateString()} ${date.toTimeString()} `)
-})
-
-app.delete('/api/persons/:id', (req,res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
-    res.status(204).end()
-
-})
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT , () => {
