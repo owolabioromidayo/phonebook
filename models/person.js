@@ -11,7 +11,7 @@ const connectToDB = () => {
              useFindAndModify: false, 
              useCreateIndex: true
         })
-    .then(res => console.log("connected to mongoDB"))
+    .then(() => console.log('connected to mongoDB'))
     .catch(err => console.log('error connection to MongoDB', err.message))
 
 }

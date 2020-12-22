@@ -83,7 +83,7 @@ app.get('/info', (req, res, next) => {
     .find({})
     .then(persons => {
         let date = new Date()
-        res.send(`Phonebook has info for ${persons.length} ${persons.length > 1 ? 'people': 'person'} \ 
+        res.send(`Phonebook has info for ${persons.length} ${persons.length > 1 ? 'people': 'person'}
                  <br/><br/> ${date.toDateString()} ${date.toTimeString()} `)
     })
     .catch(err => next(err))
@@ -98,13 +98,12 @@ app.delete('/api/persons/:id', (req,res, next) => {
 
 
 const unknownEndpoint = (req,res) => {
-    console.log('on thiss');
     res.status(404).send({error: 'unknown endpoint'})
 }
 
 app.use(unknownEndpoint)
 
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
     console.log(err.message)
     if(err.name === 'CastError'){
         return response.status(400).send({error: 'malformated id'})
@@ -118,5 +117,5 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT , () => {
-    console.log(`Server now listening on port ${PORT}.`);
+    console.log(`Server now listening on port ${PORT}.`)
 })

@@ -21,7 +21,7 @@ const Person = mongoose.model('Person', personSchema)
 
 const addEntry = (personObj) => {
     const person = new Person(personObj)
-    person.save().then(res => {
+    person.save().then(() => {
     console.log('note saved')
     mongoose.connection.close() 
     })
