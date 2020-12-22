@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
+const mongoose = require('mongoose')
 const Person = require('./models/person')
 const { response } = require('express')
 
@@ -60,16 +61,13 @@ app.put('/api/persons/:id', (req,res,next) => {
         number : body.number
     }
     Person
-    .findByIdAndUpdate(req.params.id, person, {new:true})
+    .findOneAndUpdate({_id: mongoose.Types.ObjectId(req.params.id)}, person, {new:true, runValidators:true})
     .then(updatedNote => res.json(updatedNote))
     .catch(err => next(err))
 })
 
 app.post('/api/persons', (req, res, next) => {
     const body = req.body
-    // if (body.name === undefined || body.number == undefined) {
-    //     return res.status(400).json({error: 'content missing'})
-    // }
     const person = new Person({
         name : body.name,
         number : body.number
